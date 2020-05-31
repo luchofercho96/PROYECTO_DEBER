@@ -35,9 +35,18 @@ loadlibrary('smClient64.dll','./smClient.h');
 %% ABRIR MEMORIA COMPARTIDA
 calllib('smClient64','openMemory','Sistema',2);
 calllib('smClient64','openMemory','Senales',2);
-
+%% Graficas en tiempo real
+figure
+axis equal;
+h3=plot(t(1),y(1),'--r'); hold on
+h4=plot(t(1),yd(1),'--g'); grid on
+title('Animacion')
+xlabel('x [m]'); ylabel('y [m]'); zlabel('Z [m]');
 for k=1:length(t)
    tic;
+   drawnow;
+   delete(h3);
+   delete(h4);
    %% planta simulada
    y(k)=-dend(2)*y_1(k)+numd(2)*u_1(k)+D(k);
    %% error del sistema
@@ -55,6 +64,10 @@ for k=1:length(t)
    e_1(k+1)=e(k);
    u_1(k+1)=u(k);
    y_1(k+1)=y(k);
+   %% graficas del sistema
+   h3=plot(t(1:k),y(1:k),"--r"); hold on 
+   h4=plot(t(1:k),yd(1:k),"--g"); hold on
+   grid on
    while(toc<Ts)
    end
    toc
