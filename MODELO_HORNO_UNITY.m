@@ -35,6 +35,7 @@ loadlibrary('smClient64.dll','./smClient.h');
 %% ABRIR MEMORIA COMPARTIDA
 calllib('smClient64','openMemory','Sistema',2);
 calllib('smClient64','openMemory','Senales',2);
+
 for k=1:length(t)
    tic;
    %% planta simulada
@@ -57,6 +58,7 @@ for k=1:length(t)
    while(toc<Ts)
    end
    toc
+   
 end
 %% LIBERAR MEMORIA COMPARTIDA
 calllib('smClient64','freeViews')
@@ -64,6 +66,7 @@ unloadlibrary smClient64
 %% grafica del sistema
 figure()
 subplot(4,1,1)
+plot(t,e,'--r')
 grid on;
 hold on;
 legend('Error de control')
