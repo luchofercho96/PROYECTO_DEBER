@@ -19,61 +19,65 @@ ti=0;
 tfinal=120;
 t=ti:ts1:tfinal;
 %% senal de de entrada al sistema
-u=1*ones(1,length(t));
+u(1)=0;
+e(1)=0;
 %% senal deseada del sistema
-yd=[1*ones(1,round(length(t)/2)),1*ones(1,round(length(t)/2)+1)];
+yd(1)=0;
 e_1(1)=0;
 %% perturbacion del sistema
-D=0*ones(1,length(t));
+D(1)=0;
 %% ganancias del controlador 
 kp=5.26;
 ki=0.0423;
 Ts=ts1;
+%% COMUNICACION MEMORIAS
+loadlibrary('smClient64.dll','./smClient.h');
+%% ABRIR MEMORIA COMPARTIDA
+calllib('smClient64','openMemory','Sistema',2);
+calllib('smClient64','openMemory','Senales',2);
 for k=1:length(t)
-    
+   tic;
    %% planta simulada
    y(k)=-dend(2)*y_1(k)+numd(2)*u_1(k)+D(k);
-   
    %% error del sistema
    e(k)=yd(k)-y(k);
-   
    %% controlador del sistema
    u(k)=u_1(k)+kp*(e(k)-e_1(k))+ki*Ts*e_1(k);
-%    if(u(k)<0)
-%       u(k)=0; 
-%    end
-   %% retroalimentacion variables
+   %% ESCRITURA DE SENAL DE CONTROL Y PLANTA 
+   calllib('smClient64','setFloat','Sistema',0,y(k));
+   calllib('smClient64','setFloat','Sistema',1,u(k));
+   calllib('smClient64','setFloat','Sistema',2,e(k));
+   %% LECTURA DE SENAL DESEADA Y PERTURBACION 
+   yd(k+1) = calllib('smClient64','getFloat','Senales',0);
+   D(k+1) = calllib('smClient64','getFloat','Senales',1);
+   %% ACTUALIZACION DE ESTADOS
    e_1(k+1)=e(k);
    u_1(k+1)=u(k);
    y_1(k+1)=y(k);
-   %% seccion de perturbacion simulada
-   if(t(k)>200 & t(k)<400)
-      D(k+1)=-0.0; 
-   elseif(t(k)>1000 & t(k)<1300)
-      D(k+1)=0.0;
-   else
-       D(k+1)=0;
+   while(toc<Ts)
    end
-   
+   toc
 end
+%% LIBERAR MEMORIA COMPARTIDA
+calllib('smClient64','freeViews')
+unloadlibrary smClient64
 %% grafica del sistema
 figure()
 subplot(4,1,1)
-step(Gs)
 grid on;
 hold on;
-legend('planta en s')
+legend('Error de control')
 subplot(4,1,2)
 plot(t,D(1:length(t)),'--b')
 grid on;
-legend('perturbacion')
+legend('Perturbacion')
 subplot(4,1,3)
 plot(t,y(1:length(t)),'--r')
 hold on
 plot(t,yd(1:length(t)),'--g')
 grid on;
-legend('sistema','referencia')
+legend('Sistema Real','Referencia')
 subplot(4,1,4)
 plot(t,u_1(1:length(t)),'--b')
-legend('senal control')
+legend('Senal control')
 grid on;
